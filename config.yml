@@ -42,7 +42,9 @@ cheat:
   autoPlay: false
   fastSkip: false
   chartController: false
-  allCollection: false
+  allCollection:
+    enable: false
+    excludeSomeItems: true
   unlockEvent: false
   unlockMusic: false
   unlockMaster: false

@@ -13,16 +13,16 @@ public class MainConfig
         public bool InfinityTimer { get; set; } = false;
         public bool InfinityTimerLegacy { get; set; } = false;
         public bool DisableMask { get; set; } = false;
-        public bool DisableBackground { get; set; } = false;  
-        public bool ShowFPS { get; set; } = true;  
-        public bool ForceQuickRetry { get; set; } = false;  
-        public bool ForwardATouchRegionToButton { get; set; } = false;  
-        public bool SkipFade { get; set; } = false;  
-        public bool SkipWarningScreen { get; set; } = false;  
-        public bool QuickBoot { get; set; } = false;  
-        public bool BlockCoin { get; set; } = false;  
-        public bool IgnoreAnyGameInformation { get; set; } = false;  
-        public bool ChangeDefaultOption { get; set; } = false;  
+        public bool DisableBackground { get; set; } = false;
+        public bool ShowFPS { get; set; } = true;
+        public bool ForceQuickRetry { get; set; } = false;
+        public bool ForwardATouchRegionToButton { get; set; } = false;
+        public bool SkipFade { get; set; } = false;
+        public bool SkipWarningScreen { get; set; } = false;
+        public bool QuickBoot { get; set; } = false;
+        public bool BlockCoin { get; set; } = false;
+        public bool IgnoreAnyGameInformation { get; set; } = false;
+        public bool ChangeDefaultOption { get; set; } = false;
         public bool ChangeFadeStyle { get; set; } = false;
         public SinglePlayerConfig SinglePlayer { get; set; } = new SinglePlayerConfig();
         public NetworkLoggerConfig NetworkLogger { get; set; } = new NetworkLoggerConfig();
@@ -31,13 +31,13 @@ public class MainConfig
         public CustomCameraIdConfig CustomCameraId { get; set; } = new CustomCameraIdConfig();
         public ChangeGameSettingsConfig ChangeGameSettings { get; set; } = new ChangeGameSettingsConfig();
     }
-    
+
     public class CheatConfig
     {
         public bool AutoPlay { get; set; } = false;
         public bool FastSkip { get; set; } = false;
         public bool ChartController { get; set; } = false;
-        public bool AllCollection { get; set; } = false;
+        public UnlockAllCollectionConfig AllCollection { get; set; } = new UnlockAllCollectionConfig();
         public bool UnlockEvent { get; set; } = false;
         public bool UnlockMusic { get; set; } = false;
         public bool UnlockMaster { get; set; } = false;
@@ -64,14 +64,14 @@ public class MainConfig
         public bool RestoreCertificateValidation { get; set; } = false;
         public RewriteNoteJudgeTimingConfig RewriteNoteJudgeTiming { get; set; } = new RewriteNoteJudgeTimingConfig();
     }
-    
+
     public class ModSettingConfig
     {
         public bool ShowInfo { get; set; } = true;
         public bool ShowPanel { get; set; } = true;
         public bool SafeMode { get; set; } = false;
     }
-    
+
     public class ChangeGameSettingsConfig
     {
         public bool Enable { get; set; } = false;
@@ -80,7 +80,7 @@ public class MainConfig
         public bool UploadPhoto { get; set; } = false;
         public bool CharaSelect { get; set; } = false;
     }
-    
+
     public class SinglePlayerConfig
     {
         public bool Enable { get; set; } = false;
@@ -98,7 +98,13 @@ public class MainConfig
         public bool Enable { get; set; } = false;
         public string VersionText { get; set; } = "Sinmai-Assist";
     }
-    
+
+    public class UnlockAllCollectionConfig
+    {
+        public bool Enable { get; set; } = false;
+        public bool ExcludeSomeItems { get; set; } = true;
+    }
+
     public class UnlockUtageConfig
     {
         public bool Enable { get; set; } = false;
@@ -111,7 +117,7 @@ public class MainConfig
         public float AdjustTiming { get; set; } = 0;
         public float JudgeTiming { get; set; } = 0;
     }
-    
+
     public class DummyLoginConfig
     {
         public bool Enable { get; set; } = false;
@@ -131,7 +137,7 @@ public class MainConfig
     {
         public bool Enable { get; set; } = false;
         public uint Point { get; set; } = 0;
-    } 
+    }
 
     public class UnityLoggerConfig
     {

@@ -181,7 +181,7 @@ namespace SinmaiAssist
             if (MainConfig.Cheat.AutoPlay) Patch(typeof(AutoPlay));
             if (MainConfig.Cheat.FastSkip) Patch(typeof(FastSkip));
             if (MainConfig.Cheat.ChartController) Patch(typeof(ChartController));
-            if (MainConfig.Cheat.AllCollection) Patch(typeof(AllCollection));
+            if (MainConfig.Cheat.AllCollection.Enable) Patch(typeof(AllCollection));
             if (MainConfig.Cheat.UnlockMusic) Patch(typeof(UnlockMusic));
             if (MainConfig.Cheat.UnlockMaster) Patch(typeof(UnlockMaster));
             if (MainConfig.Cheat.UnlockUtage.Enable) Patch(typeof(UnlockUtage));
