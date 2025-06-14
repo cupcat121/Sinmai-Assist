@@ -1,4 +1,6 @@
-﻿namespace SinmaiAssist.Config;
+﻿using Net.VO.Mai2;
+
+namespace SinmaiAssist.Config;
 
 public class MainConfig
 {
@@ -37,7 +39,7 @@ public class MainConfig
         public bool AutoPlay { get; set; } = false;
         public bool FastSkip { get; set; } = false;
         public bool ChartController { get; set; } = false;
-        public UnlockAllCollectionConfig AllCollection { get; set; } = new UnlockAllCollectionConfig();
+        public AllCollectionConfig AllCollection { get; set; } = new AllCollectionConfig();
         public bool UnlockEvent { get; set; } = false;
         public bool UnlockMusic { get; set; } = false;
         public bool UnlockMaster { get; set; } = false;
@@ -99,10 +101,11 @@ public class MainConfig
         public string VersionText { get; set; } = "Sinmai-Assist";
     }
 
-    public class UnlockAllCollectionConfig
+    public class AllCollectionConfig
     {
         public bool Enable { get; set; } = false;
         public bool ExcludeSomeItems { get; set; } = true;
+        public bool ForceRemoveExcludedItems { get; set; } = false;
     }
 
     public class UnlockUtageConfig

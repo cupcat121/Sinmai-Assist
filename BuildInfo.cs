@@ -1,6 +1,6 @@
 namespace SinmaiAssist { 
     public static partial class BuildInfo { 
-        public const string CommitHash = "2a00460"; 
-        public const string BuildDate = "2025-04-06T22:08:05.5764313+08:00"; 
+        public const string CommitHash = "56df88a"; 
+        public const string BuildDate = "2025-06-14T18:49:03.0636607+08:00"; 
     } 
 } 

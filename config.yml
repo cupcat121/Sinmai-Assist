@@ -45,6 +45,7 @@ cheat:
   allCollection:
     enable: false
     excludeSomeItems: true
+    forceRemoveExcludedItems: false
   unlockEvent: false
   unlockMusic: false
   unlockMaster: false

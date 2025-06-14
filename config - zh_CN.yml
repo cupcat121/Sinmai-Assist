@@ -45,6 +45,7 @@ cheat:
   allCollection: # 解锁全部收藏品
     enable: false # 是否启用
     excludeSomeItems: true # 不包含某些敏感收藏品(如成绩牌子, WEC牌子等)
+    forceRemoveExcludedItems: false # 强制移除被排除的收藏品(如成绩牌子, WEC牌子等)
   unlockEvent: false # 解锁全部活动
   unlockMusic: false # 解锁全部歌曲
   unlockMaster: false # 解锁全部歌曲Master和ReMaster难度
