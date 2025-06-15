@@ -4,7 +4,6 @@ using Manager;
 using Manager.MaiStudio;
 using Manager.UserDatas;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 
@@ -58,7 +57,10 @@ public class AllCollection
             .ToArray();
             partnerList = [];
             iconList = [];
-            titleList = [];
+            titleList = [
+                458582, 458583, 409000, 409001, 409002,
+                409003, 409004, 409005, 409006, 409007
+            ];
         }
     }
 
@@ -70,6 +72,7 @@ public class AllCollection
         bool isExcluded;
         bool isGained;
         UserItem newItem;
+        // bug: 
         List<int> list2 = (from i in __result
                            where i.stock > 0
                            select i.itemId).ToList();
@@ -80,7 +83,7 @@ public class AllCollection
             isExcluded = ExcludedCollection.frameList.Contains(frame2.Value.GetID());
 
             // case: items that should not be included
-            if (isGained ^ !isExcluded) continue;
+            if (isGained && !isExcluded) continue;
 
             // case: items that are excluded but not forced to proceed, ignoring this item
             if (isExcluded && ExcludedCollectionEnabled && !ForceRemoveExcludedItems)
@@ -88,7 +91,7 @@ public class AllCollection
 
             // fallback case: items that are decided to be added or removed
             newItem = new UserItem(frame2.Value.GetID());
-            if (ForceRemoveExcludedItems)
+            if (isExcluded && ForceRemoveExcludedItems)
             {
                 newItem.stock = 0;
                 newItem.isValid = false;
@@ -115,7 +118,7 @@ public class AllCollection
             isExcluded = ExcludedCollection.iconList.Contains(icon2.Value.GetID());
 
             // case: items that should not be included
-            if (isGained ^ !isExcluded) continue;
+            if (isGained && !isExcluded) continue;
 
             // case: items that are excluded but not forced to proceed, ignoring this item
             if (isExcluded && ExcludedCollectionEnabled && !ForceRemoveExcludedItems)
@@ -123,7 +126,7 @@ public class AllCollection
 
             // fallback case: items that are decided to be added or removed
             newItem = new UserItem(icon2.Value.GetID());
-            if (ForceRemoveExcludedItems)
+            if (isExcluded && ForceRemoveExcludedItems)
             {
                 newItem.stock = 0;
                 newItem.isValid = false;
@@ -150,7 +153,7 @@ public class AllCollection
             isExcluded = ExcludedCollection.plateList.Contains(plate2.Value.GetID());
 
             // case: items that should not be included
-            if (isGained ^ !isExcluded) continue;
+            if (isGained && !isExcluded) continue;
 
             // case: items that are excluded but not forced to proceed, ignoring this item
             if (isExcluded && ExcludedCollectionEnabled && !ForceRemoveExcludedItems)
@@ -158,7 +161,7 @@ public class AllCollection
 
             // fallback case: items that are decided to be added or removed
             newItem = new UserItem(plate2.Value.GetID());
-            if (ForceRemoveExcludedItems)
+            if (isExcluded && ForceRemoveExcludedItems)
             {
                 newItem.stock = 0;
                 newItem.isValid = false;
@@ -185,7 +188,7 @@ public class AllCollection
             isExcluded = ExcludedCollection.partnerList.Contains(partner2.Value.GetID());
 
             // case: items that should not be included
-            if (isGained ^ !isExcluded) continue;
+            if (isGained && !isExcluded) continue;
 
             // case: items that are excluded but not forced to proceed, ignoring this item
             if (isExcluded && ExcludedCollectionEnabled && !ForceRemoveExcludedItems)
@@ -193,7 +196,7 @@ public class AllCollection
 
             // fallback case: items that are decided to be added or removed
             newItem = new UserItem(partner2.Value.GetID());
-            if (ForceRemoveExcludedItems)
+            if (isExcluded && ForceRemoveExcludedItems)
             {
                 newItem.stock = 0;
                 newItem.isValid = false;
@@ -220,7 +223,7 @@ public class AllCollection
             isExcluded = ExcludedCollection.titleList.Contains(title2.Value.GetID());
 
             // case: items that should not be included
-            if (isGained ^ !isExcluded) continue;
+            if (isGained && !isExcluded) continue;
 
             // case: items that are excluded but not forced to proceed, ignoring this item
             if (isExcluded && ExcludedCollectionEnabled && !ForceRemoveExcludedItems)
@@ -228,7 +231,7 @@ public class AllCollection
 
             // fallback case: items that are decided to be added or removed
             newItem = new UserItem(title2.Value.GetID());
-            if (ForceRemoveExcludedItems)
+            if (isExcluded && ForceRemoveExcludedItems)
             {
                 newItem.stock = 0;
                 newItem.isValid = false;
