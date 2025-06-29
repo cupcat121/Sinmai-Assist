@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using MAI2.Util;
 using Manager;
+using Manager.UserDatas;
 using MelonLoader;
 using SinmaiAssist.Utils;
 using UnityEngine;
@@ -14,7 +17,8 @@ public class UserDataPanel
     private static UserData _player1 = null;
     private static UserData _player2 = null;
     private static bool _isNewItem = false;
-    
+    private static bool _isAllowOverwriteLevel = false;
+
     private enum CollectionType
     {
         Icon = UserData.Collection.Icon,
@@ -23,9 +27,9 @@ public class UserDataPanel
         Partner = UserData.Collection.Partner,
         Frame = UserData.Collection.Frame
     }
-    
-    private static string[] _userInputId = ["", "", "", "", "", "", ""];
-    
+
+    private static string[] _userInputId = ["", "", "", "", "", "", "", "", ""];
+
     public static void OnGUI()
     {
         GUILayout.Label($"User Info", MainGUI.Style.Title);
@@ -40,128 +44,253 @@ public class UserDataPanel
         }
         GUILayout.Label($"1P: {_player1.Detail.UserName} ({_player1.Detail.UserID})", MainGUI.Style.Text);
         GUILayout.Label($"2P: {_player2.Detail.UserName} ({_player2.Detail.UserID})", MainGUI.Style.Text);
-        
+
         GUILayout.Label("Add Collections", MainGUI.Style.Title);
         foreach (CollectionType type in Enum.GetValues(typeof(CollectionType)))
         {
             GUILayout.BeginHorizontal();
             int typeId = (int)type;
-            GUILayout.Label(type.ToString(), new GUIStyle(MainGUI.Style.Text){fixedWidth = 50});
+            GUILayout.Label(type.ToString(), new GUIStyle(MainGUI.Style.Text) { fixedWidth = 40 });
             _userInputId[typeId] = GUILayout.TextField(_userInputId[typeId]);
-            if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button){ fixedWidth = 50}))
+            if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
             {
-                AddCollections(0, type, _userInputId[typeId]);
-                AddCollections(1, type, _userInputId[typeId]);
+                TryParseToIDs(_userInputId[typeId], out HashSet<int> itemAddList);
+                AddCollections(0, type, itemAddList.ToArray());
+                AddCollections(1, type, itemAddList.ToArray());
+            }
+            else if (GUILayout.Button("Del", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
+            {
+                TryParseToIDs(_userInputId[typeId], out HashSet<int> itemDelList);
+                DelCollections(0, type, itemDelList.ToArray());
+                DelCollections(1, type, itemDelList.ToArray());
             }
             GUILayout.EndHorizontal();
         }
         _isNewItem = GUILayout.Toggle(_isNewItem, "Is New Item");
-        
+
         GUILayout.Label("Unlock Music", MainGUI.Style.Title);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("Music", new GUIStyle(MainGUI.Style.Text){fixedWidth = 50});
+        GUILayout.Label("Music", new GUIStyle(MainGUI.Style.Text) { fixedWidth = 40 });
         _userInputId[0] = GUILayout.TextField(_userInputId[0]);
-        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button){ fixedWidth = 50}))
+        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 40 }))
         {
-            UnlockMusic(0, _userInputId[0]);
-            UnlockMusic(1, _userInputId[0]);
+            TryParseToIDs(_userInputId[0], out HashSet<int> unlockMusicList);
+            UnlockMusic(0, unlockMusicList.ToArray());
+            UnlockMusic(1, unlockMusicList.ToArray());
         }
         GUILayout.EndHorizontal();
-        
+
+        GUILayout.Label("Edit Characters (id + level)", MainGUI.Style.Title);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Chara", new GUIStyle(MainGUI.Style.Text) { fixedWidth = 40 });
+        _userInputId[7] = GUILayout.TextField(_userInputId[7]);
+        _userInputId[8] = GUILayout.TextField(
+            _userInputId[8], 
+            new GUIStyle(UnityEngine.GUI.skin.textField) { 
+                fixedWidth = 35, alignment = TextAnchor.MiddleCenter
+            }
+        );
+        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
+        {
+            TryParseToIDs(_userInputId[7], out HashSet<int> charaEditList);
+            TryParseToIDs(_userInputId[8], out HashSet<int> level);
+            AddCharaterEx(0, charaEditList.ToArray(), (uint)level.FirstOrDefault() | 1U);
+            AddCharaterEx(1, charaEditList.ToArray(), (uint)level.FirstOrDefault() | 1U);
+        }
+        if (GUILayout.Button("Del", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
+        {
+            TryParseToIDs(_userInputId[7], out HashSet<int> charaEditList);
+            TryParseToIDs(_userInputId[8], out HashSet<int> level);
+            AddCharaterEx(0, charaEditList.ToArray(), isDelete: true);
+            AddCharaterEx(1, charaEditList.ToArray(), isDelete: true);
+        }
+        GUILayout.EndHorizontal();
+        _isAllowOverwriteLevel = GUILayout.Toggle(_isAllowOverwriteLevel, "Allow Overwritting level");
+
         GUILayout.Label("MaiMile", MainGUI.Style.Title);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("MaiMile", new GUIStyle(MainGUI.Style.Text){fixedWidth = 50});
+        GUILayout.Label("MaiMile", new GUIStyle(MainGUI.Style.Text) { fixedWidth = 40 });
         _userInputId[6] = GUILayout.TextField(_userInputId[6]);
-        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button){ fixedWidth = 50}))
+        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 40 }))
         {
             AddMaiMile(0, _userInputId[6]);
             AddMaiMile(1, _userInputId[6]);
         }
         GUILayout.EndHorizontal();
-        
+
         GUILayout.Label("User Data Backup", MainGUI.Style.Title);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("1P", MainGUI.Style.Button)) User.ExportBackupData(0);
         if (GUILayout.Button("2P", MainGUI.Style.Button)) User.ExportBackupData(1);
         GUILayout.EndHorizontal();
-        
+
     }
 
-    private static void AddCollections(long index, CollectionType type, string input)
+    private static void AddCollections(long index, CollectionType type, in int[] ids)
     {
         UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
         if (userData.IsGuest())
         {
-            GameMessageManager.SendMessage((int)index,"Guest Account\nUnable to add collections");
+            GameMessageManager.SendMessage((int)index, "Guest Account\nUnable to add collections");
             return;
         }
         try
         {
-            if (int.TryParse(input, out int id))
+            foreach (int id in ids)
             {
                 if (userData.AddCollections((UserData.Collection)type, id, _isNewItem))
                 {
-                    GameMessageManager.SendMessage((int)index,$"Add Collections \n{type} {id}" + (_isNewItem ? " (New Item)" : "") );
+                    GameMessageManager.SendMessage((int)index, $"Add Collections \n{type} {id}" + (_isNewItem ? " (New Item)" : ""));
                 }
                 else
                 {
-                    GameMessageManager.SendMessage((int)index,$"Failed to add Collections or already added\n{type} {id}");
+                    GameMessageManager.SendMessage((int)index, $"Failed to add Collections or already added\n{type} {id}");
                 }
-            }
-            else
-            {
-                GameMessageManager.SendMessage((int)index,$"Invalid ID\n {input}");
+
             }
         }
         catch (Exception e)
         {
-            GameMessageManager.SendMessage((int)index,$"Unknown error");
+            GameMessageManager.SendMessage((int)index, $"Unknown error");
             MelonLogger.Error(e);
         }
     }
 
-    private static void UnlockMusic(long index, string input)
+    private static void DelCollections(long index, CollectionType type, in int[] ids)
     {
         UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
         if (userData.IsGuest())
         {
-            GameMessageManager.SendMessage((int)index,"Guest Account\nUnable to unlock music");
+            GameMessageManager.SendMessage((int)index, "Guest Account\nUnable to delete collections");
             return;
         }
         try
         {
-            if (int.TryParse(input, out int id))
+            List<UserItem> oldCollections;
+            switch (type)
+            {
+                case CollectionType.Icon:
+                    oldCollections = userData.IconList;
+                    break;
+                case CollectionType.Plate:
+                    oldCollections = userData.PlateList;
+                    break;
+                case CollectionType.Title:
+                    oldCollections = userData.TitleList;
+                    break;
+                case CollectionType.Partner:
+                    oldCollections = userData.PartnerList;
+                    break;
+                case CollectionType.Frame:
+                    oldCollections = userData.FrameList;
+                    break;
+                default:
+                    GameMessageManager.SendMessage((int)index, $"Unsupported Collection Type: {type}");
+                    return;
+
+            }
+            foreach (int id in ids)
+            {
+                var oldItem = oldCollections.Select((UserItem it) => it).FirstOrDefault((UserItem it) => it.itemId == id);
+                if (oldItem == null)
+                {
+                    GameMessageManager.SendMessage((int)index, $"Item not found, do nothing...\n{type} {id}");
+                    return;
+                }
+                oldItem.stock = 0;
+                oldItem.isValid = false;
+            }
+        }
+        catch (Exception e)
+        {
+            GameMessageManager.SendMessage((int)index, $"Unknown error");
+            MelonLogger.Error(e);
+        }
+    }
+
+    private static void AddCharaterEx(
+        long index, in int[] ids, uint level = 1U, bool isDelete = false)
+    {
+        UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
+        if (userData.IsGuest())
+        {
+            GameMessageManager.SendMessage((int)index, "Guest Account\nUnable to edit character");
+            return;
+        }
+        foreach (int id in ids)
+        {
+            var old_chara = userData.CharaList.FirstOrDefault((UserChara c) => c.ID == id);
+            if (old_chara == null)
+            {
+                UserChara newChara = new UserChara(id);
+                newChara.AddLevel(level - 1);
+                userData.CharaList.Add(newChara);
+                userData.NewCharaList.Add(id);
+                GameMessageManager.SendMessage((int)index, $"Add Character {id}\nwith Lv.{level}");
+            }
+            else
+            {
+                if (isDelete)
+                {
+                    old_chara.Clear();
+                    userData.CharaList.Remove(old_chara);
+                    GameMessageManager.SendMessage((int)index, $"Delete Character {id}");
+                    return;
+                }
+                if (!_isAllowOverwriteLevel)
+                {
+                    GameMessageManager.SendMessage((int)index, $"Character already exists, do nothing...\n{id}");
+                    return;
+                }
+                if (level < old_chara.Level)
+                {
+                    GameMessageManager.SendMessage((int)index, $"Downgrading character level is prohibited\n{id}");
+                    return;
+                }
+                GameMessageManager.SendMessage((int)index, $"Character {id} level up\nLv.{old_chara.Level} -> Lv.{level}");
+                old_chara.AddLevel(level - old_chara.Level);
+            }
+        }
+    }
+
+    private static void UnlockMusic(long index, in int[] ids)
+    {
+        UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
+        if (userData.IsGuest())
+        {
+            GameMessageManager.SendMessage((int)index, "Guest Account\nUnable to unlock music");
+            return;
+        }
+        try
+        {
+            foreach (int id in ids)
             {
                 if (!userData.IsUnlockMusic(UserData.MusicUnlock.Base, id))
                 {
                     if (userData.AddUnlockMusic(UserData.MusicUnlock.Base, id))
                     {
-                        GameMessageManager.SendMessage((int)index,$"Unlock Music \n{id}");
+                        GameMessageManager.SendMessage((int)index, $"Unlock Music \n{id}");
                     }
                     else
                     {
-                        GameMessageManager.SendMessage((int)index,$"Failed to unlock music or already unlocked \n{id}");
+                        GameMessageManager.SendMessage((int)index, $"Failed to unlock music or already unlocked \n{id}");
                     }
                 }
-                else if(!userData.IsUnlockMusic(UserData.MusicUnlock.Master, id))
+                else if (!userData.IsUnlockMusic(UserData.MusicUnlock.Master, id))
                 {
                     userData.AddUnlockMusic(UserData.MusicUnlock.Master, id);
                     userData.AddUnlockMusic(UserData.MusicUnlock.ReMaster, id);
-                    GameMessageManager.SendMessage((int)index,$"Unlock Master \n{id}");
+                    GameMessageManager.SendMessage((int)index, $"Unlock Master \n{id}");
                 }
                 else
                 {
-                    GameMessageManager.SendMessage((int)index,$"Failed to unlock Master or already unlocked\n{id}");
+                    GameMessageManager.SendMessage((int)index, $"Failed to unlock Master or already unlocked\n{id}");
                 }
-            }
-            else
-            {
-                GameMessageManager.SendMessage((int)index,$"Invalid ID\n {input}");
             }
         }
         catch (Exception e)
         {
-            GameMessageManager.SendMessage((int)index,$"Unknown error");
+            GameMessageManager.SendMessage((int)index, $"Unknown error");
             MelonLogger.Error(e);
         }
     }
@@ -171,35 +300,80 @@ public class UserDataPanel
         UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
         if (SinmaiAssist.GameVersion < 25000)
         {
-            GameMessageManager.SendMessage((int)index,"MaiMile is not supported in this version");
+            GameMessageManager.SendMessage((int)index, "MaiMile is not supported in this version");
             return;
         }
         if (userData.IsGuest())
         {
-            GameMessageManager.SendMessage((int)index,"Guest Account\nUnable to add MaiMile");
+            GameMessageManager.SendMessage((int)index, "Guest Account\nUnable to add MaiMile");
             return;
         }
         try
         {
-            if (int.TryParse(input , out int addMile))
+            if (int.TryParse(input, out int addMile))
             {
                 var haveMile = userData.Detail.Point;
                 if (haveMile + addMile >= 99999)
                     addMile = 99999 - haveMile;
                 var addMileBefore = haveMile + addMile;
-                
+
                 userData.AddPresentMile(addMile);
-                GameMessageManager.SendMessage((int)index,$"Add {addMile} MaiMile\n ({addMileBefore} -> {haveMile})");
+                GameMessageManager.SendMessage((int)index, $"Add {addMile} MaiMile\n ({addMileBefore} -> {haveMile})");
             }
             else
             {
-                GameMessageManager.SendMessage((int)index,$"Invalid MaiMile\n {input}");
+                GameMessageManager.SendMessage((int)index, $"Invalid MaiMile\n {input}");
             }
         }
         catch (Exception e)
         {
-            GameMessageManager.SendMessage((int)index,$"Unknown error");
+            GameMessageManager.SendMessage((int)index, $"Unknown error");
             MelonLogger.Error(e);
         }
+    }
+
+    private static bool TryParseToIDs(string input, out HashSet<int> ids, Func<bool> error_hook = null)
+    {
+        char[] DELIMITER = { ',', '，' };
+        char[] SEQ_INDICATOR = { '-' };
+        var elems = input.Split(DELIMITER);
+
+        int id;
+        bool error = false;
+        ids = new HashSet<int>();
+
+        if (input.Length == 0 || input.Trim().Length == 0) return false; // no input
+
+        foreach (var elem in elems.Select((string s) => s.Trim()))
+        {
+            if (int.TryParse(elem, out id))
+            {
+                ids.Add(id);
+            }
+            else
+            {
+                string[] elems2 = elem.Split(SEQ_INDICATOR);
+                if (elems2.Length == 2 && int.TryParse(elems2[0], out int start) && int.TryParse(elems2[1], out int end))
+                {
+                    if (start > end)
+                    {
+                        error = true;
+                        // ignore the rest of input
+                        break;
+                    }
+                    for (int i = start; i <= end; i++)
+                    {
+                        ids.Add(i);
+                    }
+                }
+                else
+                {
+                    error = true;
+                }
+            }
+        }
+        if (error_hook != null) error_hook();
+
+        return error;
     }
 }
