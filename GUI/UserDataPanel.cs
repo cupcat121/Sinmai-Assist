@@ -14,7 +14,7 @@ public class UserDataPanel
 {
     private static UserData _player1 = null;
     private static UserData _player2 = null;
-    private static bool _isNewItem = false;
+    //private static bool _isNewItem = false;
     private static bool _isAllowOverwriteLevel = false;
 
     private enum CollectionType
@@ -64,7 +64,7 @@ public class UserDataPanel
             }
             GUILayout.EndHorizontal();
         }
-        _isNewItem = GUILayout.Toggle(_isNewItem, "Is New Item");
+        //_isNewItem = GUILayout.Toggle(_isNewItem, "Is New Item");
 
         GUILayout.Label("Unlock Music", MainGUI.Style.Title);
         GUILayout.BeginHorizontal();
@@ -83,24 +83,19 @@ public class UserDataPanel
         GUILayout.Label("Chara", new GUIStyle(MainGUI.Style.Text) { fixedWidth = 40 });
         _userInputId[7] = GUILayout.TextField(_userInputId[7]);
         _userInputId[8] = GUILayout.TextField(
-            _userInputId[8], 
-            new GUIStyle(UnityEngine.GUI.skin.textField) { 
-                fixedWidth = 35, alignment = TextAnchor.MiddleCenter
+            _userInputId[8],
+            new GUIStyle(UnityEngine.GUI.skin.textField)
+            {
+                fixedWidth = 35,
+                alignment = TextAnchor.MiddleCenter
             }
         );
-        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
+        if (GUILayout.Button("Add", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 40 }))
         {
             TryParseToIDs(_userInputId[7], out HashSet<int> charaEditList);
             TryParseToIDs(_userInputId[8], out HashSet<int> level);
             AddCharaterEx(0, charaEditList.ToArray(), (uint)level.FirstOrDefault() | 1U);
             AddCharaterEx(1, charaEditList.ToArray(), (uint)level.FirstOrDefault() | 1U);
-        }
-        if (GUILayout.Button("Del", new GUIStyle(MainGUI.Style.Button) { fixedWidth = 25 }))
-        {
-            TryParseToIDs(_userInputId[7], out HashSet<int> charaEditList);
-            TryParseToIDs(_userInputId[8], out HashSet<int> level);
-            AddCharaterEx(0, charaEditList.ToArray(), isDelete: true);
-            AddCharaterEx(1, charaEditList.ToArray(), isDelete: true);
         }
         GUILayout.EndHorizontal();
         _isAllowOverwriteLevel = GUILayout.Toggle(_isAllowOverwriteLevel, "Allow Overwritting level");
@@ -126,6 +121,9 @@ public class UserDataPanel
 
     private static void AddCollections(long index, CollectionType type, in int[] ids)
     {
+        int successCount = 0;
+        int failCount = 0;
+        bool isNewUtem = true;      // this maybe not affect anything, both values are effective
         UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
         if (userData.IsGuest())
         {
@@ -136,13 +134,27 @@ public class UserDataPanel
         {
             foreach (int id in ids)
             {
-                if (userData.AddCollections((UserData.Collection)type, id, _isNewItem))
+                if (userData.AddCollections((UserData.Collection)type, id, isNewUtem))
                 {
-                    GameMessageManager.SendMessage((int)index, $"Add Collections \n{type} {id}" + (_isNewItem ? " (New Item)" : ""));
+                    successCount++;
                 }
                 else
                 {
-                    GameMessageManager.SendMessage((int)index, $"Failed to add Collections or already added\n{type} {id}");
+                    // if your account once had the collections and you had removed them via sending stock0,
+                    // title server would still keep these columns even that the data are invalid
+                    // and the game will complain as a result of the dirty data
+                    // so this message will show even if you added the collection
+                    failCount++;
+                }
+                GameMessageManager.SendMessage((int)index,
+                    $"{successCount} {(successCount > 1 ? type : type.ToString() + 's')}s added without error, " +
+                    $"{failCount} {(failCount > 1 ? type : type.ToString() + 's')} error");
+                if (failCount > 0)
+                {
+                    GameMessageManager.SendMessage((int)index, $"Unknown error...\n" +
+                        $"Usually caused by the dirty data of your account. " +
+                        $"this program ensures the item to be added or existed, so most of time you can ignore this error\n" +
+                        $"\n{type} {id}", title: "Warning");
                 }
 
             }
@@ -197,6 +209,7 @@ public class UserDataPanel
                 }
                 oldItem.stock = 0;
                 oldItem.isValid = false;
+                GameMessageManager.SendMessage((int)index, $"Item deleted\n{type} {id}");
             }
         }
         catch (Exception e)
@@ -206,9 +219,7 @@ public class UserDataPanel
         }
     }
 
-    private static void AddCharaterEx(
-        long index, in int[] ids, uint level = 1U, bool isDelete = false)
-    {
+    private static void AddCharaterEx(long index, in int[] ids, uint level = 1U) {
         UserData userData = Singleton<UserDataManager>.Instance.GetUserData(index);
         if (userData.IsGuest())
         {
@@ -228,13 +239,6 @@ public class UserDataPanel
             }
             else
             {
-                if (isDelete)
-                {
-                    old_chara.Clear();
-                    userData.CharaList.Remove(old_chara);
-                    GameMessageManager.SendMessage((int)index, $"Delete Character {id}");
-                    return;
-                }
                 if (!_isAllowOverwriteLevel)
                 {
                     GameMessageManager.SendMessage((int)index, $"Character already exists, do nothing...\n{id}");
